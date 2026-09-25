@@ -1,0 +1,10 @@
+{
+  "name": "Secure Exam Portal",
+  "description": "Online examination system with proctoring features like fullscreen lock, tab switch detection, and cheating prevention.",
+  "requestFramePermissions": [
+    "fullscreen",
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
