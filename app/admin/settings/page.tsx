@@ -4,13 +4,19 @@ import { useState, useEffect } from 'react';
 import { Key, Save, RefreshCw } from 'lucide-react';
 
 export default function SettingsPage() {
-  const [examKey, setExamKey] = useState('123456');
+  const [examKey, setExamKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const storedKey = localStorage.getItem('examKey');
+      if (storedKey) return storedKey;
+    }
+    return '123456';
+  });
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const storedKey = localStorage.getItem('examKey');
-    if (storedKey) {
-      setExamKey(storedKey);
+    if (!storedKey) {
+      localStorage.setItem('examKey', '123456');
     }
   }, []);
 

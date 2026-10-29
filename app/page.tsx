@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, User, ShieldAlert } from 'lucide-react';
 import { motion } from 'motion/react';
+import { INITIAL_DEFAULT_EXAMS } from '@/lib/scoring';
 
 export default function Home() {
   const router = useRouter();
@@ -15,39 +16,49 @@ export default function Home() {
   const [studentClicks, setStudentClicks] = useState(0);
   const [isAdminVisible, setIsAdminVisible] = useState(false);
 
+  useEffect(() => {
+    // Ensure default exams with negative marking configuration are present
+    const savedExams = localStorage.getItem('examsApp_exams');
+    if (!savedExams) {
+      localStorage.setItem('examsApp_exams', JSON.stringify(INITIAL_DEFAULT_EXAMS));
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (role === 'student') {
-      const savedExams = localStorage.getItem('examsApp_exams');
+      const savedExams = localStorage.getItem('examsApp_exams') || JSON.stringify(INITIAL_DEFAULT_EXAMS);
       let isCodeValid = false;
       let matchedExamId = '';
       
-      if (savedExams) {
+      try {
         const parsedExams = JSON.parse(savedExams);
-        const exam = parsedExams.find((ex: any) => ex.accessCode === examKey);
+        const exam = parsedExams.find((ex: any) => ex.accessCode === examKey.trim());
         if (exam) {
           isCodeValid = true;
           matchedExamId = exam.id;
         }
+      } catch (err) {
+        console.error('Failed to parse exams', err);
       }
 
       if (!isCodeValid) {
-        if (examKey === '123456') { // Fallback demo
-           // DO NOTHING, ALLOW DEMO
+        if (examKey.trim() === '123456') {
+          matchedExamId = 'demo-exam-101';
+          isCodeValid = true;
         } else {
           alert("Invalid Exam Key! Please ask your teacher for the correct code.");
           return;
         }
-      } else {
-        localStorage.setItem('examsApp_currentExamId', matchedExamId);
       }
+
+      localStorage.setItem('examsApp_currentExamId', matchedExamId);
+      localStorage.setItem('examsApp_currentStudentEmail', email.trim() || 'student@example.com');
     }
 
     setLoading(true);
 
-    // MOCK LOGIN FOR NOW - Users need to configure Supabase to use the real auth.
-    // In a real app we would use supabase.auth.signInWithPassword(...)
     setTimeout(() => {
       setLoading(false);
       if (role === 'admin') {
@@ -55,8 +66,9 @@ export default function Home() {
       } else {
         router.push('/student/exam');
       }
-    }, 1000);
+    }, 600);
   };
+
 
   const handleStudentClick = () => {
     setRole('student');
